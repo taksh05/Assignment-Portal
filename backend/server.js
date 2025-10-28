@@ -1,82 +1,69 @@
 import express from "express";
 import mongoose from "mongoose";
-import cors from "cors";
 import dotenv from "dotenv";
+import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import path from "path";
-import fs from "fs";
-import multer from "multer";
+import { fileURLToPath } from "url";
 
-// Import Routes
-import authRoutes from "./routes/authRoutes.js";
-import classRoutes from "./routes/classRoutes.js";
-import assignmentRoutes from "./routes/assignmentRoutes.js";
-import submissionRoutes from "./routes/submissionRoutes.js";
-import adminRoutes from "./routes/adminRoutes.js";
+import authRoutes from "./routes/auth.js";
+import assignmentRoutes from "./routes/assignment.js";
+import submissionRoutes from "./routes/submission.js";
+import adminRoutes from "./routes/admin.js";
 
 dotenv.config();
+
+// Fix __dirname for ES module syntax
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 
-// ---------------- SECURITY ----------------
-app.use(helmet());
+// ✅ Middleware
 app.use(express.json());
+app.use(helmet());
 
-// ✅ FIXED CORS (explicitly allow frontend + localhost)
+// ✅ Enable CORS for your frontend domain
 app.use(
   cors({
     origin: [
-      "https://assignment-portal-xi.vercel.app", // your deployed frontend
-      "https://assignment-portal-ten.vercel.app", // your deployed backend (vercel)
-      "http://localhost:5173", // local dev
+      "https://assignment-portal-xi.vercel.app", // Frontend deployed URL
+      "http://localhost:5173", // Local dev (optional)
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
 );
 
-// ---------------- RATE LIMIT ----------------
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+// ✅ Rate limiter for security
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
   max: 100,
-  message: "Too many requests. Please try again later.",
 });
-app.use("/api/auth", authLimiter, authRoutes);
+app.use(limiter);
 
-// ---------------- FILE UPLOADS ----------------
-const __dirname = path.resolve();
-const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
-app.use("/uploads", express.static(uploadsDir));
-
-// ---------------- ROUTES ----------------
-app.use("/api/classes", classRoutes);
+// ✅ Routes
+app.use("/api/auth", authRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/admin", adminRoutes);
 
+// ✅ Vercel-safe uploads folder (read-only fix)
+const uploadsDir = path.resolve("uploads");
+app.use("/uploads", express.static(uploadsDir));
+
+// ✅ Root route
 app.get("/", (req, res) => {
-  res.json({ message: "🎓 Assignment Portal API working fine 🚀" });
+  res.send("🎓 Assignment Portal API working fine 🚀");
 });
 
-// ---------------- ERROR HANDLING ----------------
-app.use((req, res) => {
-  res.status(404).json({ message: "❌ Route not found" });
-});
-
-app.use((err, req, res, next) => {
-  console.error("🔥 Error:", err);
-  if (err instanceof multer.MulterError)
-    return res.status(400).json({ message: err.message });
-  res.status(500).json({ message: "Internal Server Error", error: err.message });
-});
-
-// ---------------- DATABASE CONNECTION ----------------
+// ✅ MongoDB connection
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
-  console.error("❌ MONGO_URI not found in .env");
+  console.error("❌ MONGO_URI is missing in environment variables!");
   process.exit(1);
 }
 
@@ -84,9 +71,6 @@ mongoose
   .connect(MONGO_URI)
   .then(() => {
     console.log("✅ Connected to MongoDB Atlas");
-    app.listen(PORT, () => console.log(`⚡ Server running on port ${PORT}`));
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   })
-  .catch((err) => {
-    console.error("❌ MongoDB connection failed:", err.message);
-    process.exit(1);
-  });
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
