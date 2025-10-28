@@ -4,8 +4,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import path from "path";
-import fs from "fs";
 import multer from "multer";
 
 // Import Routes
@@ -15,50 +13,44 @@ import assignmentRoutes from "./routes/assignmentRoutes.js";
 import submissionRoutes from "./routes/submissionRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 
-dotenv.config(); // Load .env file
-
+dotenv.config();
 const app = express();
 
-// ✅ Security Middleware
+// ✅ Security
 app.use(helmet());
 
-// ✅ CORS Setup (Dynamic from .env)
+// ✅ CORS
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+  origin: process.env.CORS_ORIGIN?.split(",") || ["http://localhost:5173"],
   credentials: true,
 };
 app.use(cors(corsOptions));
 
-// ✅ Rate Limiting (for login & auth)
+// ✅ Rate Limiting
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 min window
-  max: 100, // limit each IP to 100 requests per window
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  message: "Too many requests. Please try again later.",
+  message: "Too many requests. Try again later.",
 });
 
-// ✅ Body Parser
 app.use(express.json());
 
-// ✅ Handle file uploads folder
-const __dirname = path.resolve();
-const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
-}
-app.use("/uploads", express.static(uploadsDir));
+// ⚠️ Disable local uploads for Vercel (filesystem is read-only)
+// If you later host on Render/Render/EC2, you can re-enable this
+// app.use("/uploads", express.static("uploads"));
 
-// ✅ API Routes
+// ✅ Routes
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/admin", adminRoutes);
 
-// ✅ Default route
+// ✅ Root route
 app.get("/", (req, res) => {
-  res.json({ message: "🎓 Assignment Portal API is running successfully 🚀" });
+  res.json({ message: "🎓 Assignment Portal API running successfully 🚀" });
 });
 
 // ✅ 404 handler
@@ -66,7 +58,7 @@ app.use((req, res) => {
   res.status(404).json({ message: "❌ Route not found" });
 });
 
-// ✅ Global Error Handler
+// ✅ Error handler
 app.use((err, req, res, next) => {
   console.error("🔥 Error:", err);
   if (err instanceof multer.MulterError) {
@@ -75,25 +67,22 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Internal Server Error", error: err.message });
 });
 
-// ✅ Connect to MongoDB and Start Server
-const PORT = process.env.PORT || 5000;
+// ✅ MongoDB connection
 const MONGO_URI = process.env.MONGO_URI;
-
 if (!MONGO_URI) {
-  console.error("❌ MONGO_URI missing in .env");
+  console.error("❌ MONGO_URI missing in environment variables!");
   process.exit(1);
 }
 
 mongoose
-  .connect(MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    console.log("✅ Connected to MongoDB Atlas");
-    app.listen(PORT, () => console.log(`⚡ Server running on port ${PORT}`));
-  })
-  .catch((err) => {
-    console.error("❌ MongoDB connection failed:", err.message);
-    process.exit(1);
-  });
+  .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("✅ Connected to MongoDB Atlas"))
+  .catch((err) => console.error("❌ MongoDB connection failed:", err.message));
+
+// ✅ Export app for Vercel serverless
+if (process.env.VERCEL) {
+  module.exports = app;
+} else {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`⚡ Server running locally on port ${PORT}`));
+}
