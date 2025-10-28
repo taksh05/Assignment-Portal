@@ -1,5 +1,5 @@
 import express from 'express';
-import User from '../models/User.js';
+import User from '../models/user.js';
 import Class from '../models/Class.js';
 import protect from '../middleware/authMiddleware.js';
 import adminProtect from '../middleware/adminMiddleware.js';
@@ -9,7 +9,7 @@ const router = express.Router();
 // GET all users (Admin Only)
 router.get('/users', protect, adminProtect, async (req, res) => {
   try {
-    // ✅ Fixed: select '-password' to hide the hashed password
+    // Select '-password' to hide the hashed password
     const users = await User.find({}).select('-password');
     res.json(users);
   } catch (error) {
@@ -20,7 +20,7 @@ router.get('/users', protect, adminProtect, async (req, res) => {
 // GET all classes (Admin Only)
 router.get('/classes', protect, adminProtect, async (req, res) => {
   try {
-    // ✅ Fixed: populate 'teacher' field
+    // Populate 'teacher' field to show the teacher's name
     const classes = await Class.find({}).populate('teacher', 'name');
     res.json(classes);
   } catch (error) {
