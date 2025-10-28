@@ -1,5 +1,5 @@
 import express from "express";
-import mongoose from "mongoose";
+// import mongoose from "mongoose"; // Temporarily disabled
 import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet";
@@ -15,24 +15,18 @@ import assignmentRoutes from "./routes/assignmentRoutes.js";
 import submissionRoutes from "./routes/submissionRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 
-// Load environment variables from .env file
 dotenv.config();
-
-// Initialize Express app
 const app = express();
 
-// ====== Security Middlewares ======
 app.use(helmet());
 
-// NEW, MORE ROBUST CORS CONFIGURATION
 const allowedOrigins = [
-  'https://assignment-portal-lzwq.vercel.app', // Your live frontend URL
-  'http://localhost:5174'                      // Your local frontend for testing
+  'https://assignment-portal-nine.vercel.app', // Your latest frontend URL
+  'http://localhost:5174'
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -51,38 +45,29 @@ const authLimiter = rateLimit({
   message: "Too many requests from this IP, please try again after 15 minutes",
 });
 
-// ====== General Middlewares ======
 app.use(express.json());
 
-// Create 'uploads' directory if it doesn't exist
 const __dirname = path.resolve();
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
-  console.log("Created 'uploads' directory.");
 }
-
-// Serve static files from the 'uploads' directory
 app.use('/uploads', express.static(uploadsDir));
 
-// ====== API Routes ======
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/admin", adminRoutes);
 
-// ====== Default Route for Health Check ======
 app.get("/", (req, res) => {
   res.json({ message: "🎓 Classroom Portal API is running successfully 🚀" });
 });
 
-// ====== 404 Not Found Fallback ======
 app.use((req, res) => {
   res.status(404).json({ message: "❌ The requested route does not exist" });
 });
 
-// ====== Global Error Handler ======
 app.use((err, req, res, next) => {
   console.error("🔥 An unexpected error occurred:", err);
   if (err instanceof multer.MulterError) {
@@ -91,8 +76,13 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Internal Server Error", error: err.message });
 });
 
-// ====== Connect to MongoDB & Start Server ======
 const PORT = process.env.PORT || 5000;
+
+// Temporarily start the server without a database connection
+app.listen(PORT, () => console.log(`⚡ Server is listening on port ${PORT}`));
+
+/*
+// ====== Connect to MongoDB & Start Server ======
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
@@ -110,3 +100,4 @@ mongoose
     console.error("❌ MongoDB connection error:", err);
     process.exit(1);
   });
+*/
