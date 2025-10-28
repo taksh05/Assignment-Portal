@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // This line will work after you run "npm install axios"
+import api from '../../axios'; // ✅ use your axios instance (instead of direct axios import)
 
 // Modal for Students to create a new submission
 const SubmissionModal = ({ isOpen, onClose, onSubmit, assignments }) => {
@@ -25,12 +25,10 @@ const SubmissionModal = ({ isOpen, onClose, onSubmit, assignments }) => {
             alert('Please select an assignment and a file.');
             return;
         }
-        // Create FormData to send file
         const formData = new FormData();
-        formData.append('assignmentId', assignmentId); // Add assignmentId
-        formData.append('file', file); // Add the file
-        
-        onSubmit(formData); // Send FormData to the handler
+        formData.append('assignmentId', assignmentId);
+        formData.append('file', file);
+        onSubmit(formData);
     };
 
     return (
@@ -38,13 +36,18 @@ const SubmissionModal = ({ isOpen, onClose, onSubmit, assignments }) => {
             <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-xl">
                 <h2 className="text-2xl font-bold mb-4">Submit Assignment</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Assignment Selector */}
-                    <select value={assignmentId} onChange={(e) => setAssignmentId(e.target.value)} className="w-full p-2 border border-gray-300 rounded" required>
+                    <select
+                        value={assignmentId}
+                        onChange={(e) => setAssignmentId(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded"
+                        required
+                    >
                         <option value="">Select Assignment</option>
-                        {assignments.map(a => <option key={a._id} value={a._id}>{a.title}</option>)}
+                        {assignments.map(a => (
+                            <option key={a._id} value={a._id}>{a.title}</option>
+                        ))}
                     </select>
                     
-                    {/* File Input Button */}
                     <div>
                         <label className="w-full flex items-center px-4 py-2 bg-white text-blue-500 rounded-lg shadow-sm tracking-wide uppercase border border-blue-500 cursor-pointer hover:bg-blue-500 hover:text-white">
                             <svg className="w-6 h-6 mr-2" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -56,7 +59,6 @@ const SubmissionModal = ({ isOpen, onClose, onSubmit, assignments }) => {
                         <span className="text-gray-600 text-sm ml-2">{fileName}</span>
                     </div>
                     
-                    {/* Action Buttons */}
                     <div className="flex justify-end gap-4 pt-4">
                         <button type="button" onClick={onClose} className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
                         <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
@@ -67,7 +69,7 @@ const SubmissionModal = ({ isOpen, onClose, onSubmit, assignments }) => {
     );
 };
 
-// (The GradeModal remains the same as your version)
+// Grade Modal (same as before)
 const GradeModal = ({ isOpen, onClose, onSubmit, submission }) => {
     const [grade, setGrade] = useState('');
     const [feedback, setFeedback] = useState('');
@@ -84,9 +86,27 @@ const GradeModal = ({ isOpen, onClose, onSubmit, submission }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-xl">
                 <h2 className="text-2xl font-bold mb-4">Grade Submission</h2>
-                <form onSubmit={(e) => { e.preventDefault(); onSubmit({ grade, feedback }); }} className="space-y-4">
-                    <input type="number" placeholder="Grade (e.g., 85)" value={grade} onChange={(e) => setGrade(e.target.value)} className="w-full p-2 border rounded" required />
-                    <textarea placeholder="Feedback" value={feedback} onChange={(e) => setFeedback(e.target.value)} className="w-full p-2 border rounded" />
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        onSubmit({ grade, feedback });
+                    }}
+                    className="space-y-4"
+                >
+                    <input
+                        type="number"
+                        placeholder="Grade (e.g., 85)"
+                        value={grade}
+                        onChange={(e) => setGrade(e.target.value)}
+                        className="w-full p-2 border rounded"
+                        required
+                    />
+                    <textarea
+                        placeholder="Feedback"
+                        value={feedback}
+                        onChange={(e) => setFeedback(e.target.value)}
+                        className="w-full p-2 border rounded"
+                    />
                     <div className="flex justify-end gap-4 pt-4">
                         <button type="button" onClick={onClose} className="bg-gray-300 px-4 py-2 rounded">Cancel</button>
                         <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Submit Grade</button>
@@ -97,7 +117,6 @@ const GradeModal = ({ isOpen, onClose, onSubmit, submission }) => {
     );
 };
 
-
 const MySubmissions = () => {
     const [submissions, setSubmissions] = useState([]);
     const [userAssignments, setUserAssignments] = useState([]);
@@ -107,18 +126,16 @@ const MySubmissions = () => {
     const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
     const [selectedSubmission, setSelectedSubmission] = useState(null);
     const user = JSON.parse(localStorage.getItem('user'));
-    const token = localStorage.getItem('token'); // Get token once
+    const token = localStorage.getItem('token');
 
     const fetchData = async () => {
         setIsLoading(true);
         try {
             if (!token) throw new Error('You are not logged in.');
-            
             const [submissionsRes, assignmentsRes] = await Promise.all([
-                axios.get('http://localhost:5000/api/submissions', { headers: { 'Authorization': `Bearer ${token}` } }),
-                axios.get('http://localhost:5000/api/assignments', { headers: { 'Authorization': `Bearer ${token}` } })
+                api.get('/submissions', { headers: { Authorization: `Bearer ${token}` } }),
+                api.get('/assignments', { headers: { Authorization: `Bearer ${token}` } }),
             ]);
-
             setSubmissions(submissionsRes.data);
             setUserAssignments(assignmentsRes.data);
         } catch (err) {
@@ -132,50 +149,32 @@ const MySubmissions = () => {
         fetchData();
     }, []);
 
-    // --- THIS FUNCTION IS UPDATED ---
     const handleSubmit = async (formData) => {
         try {
-            // Send FormData using axios
-            const res = await axios.post(
-                'http://localhost:5000/api/submissions',
-                formData,
-                { headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data' // Axios sets this, but good to know
-                  } 
-                }
-            );
-            
-            // Add new submission to the list
-            setSubmissions(prev => [res.data, ...prev]);
+            const res = await api.post('/submissions', formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            setSubmissions((prev) => [res.data, ...prev]);
             setIsSubmitModalOpen(false);
-            
         } catch (err) {
-            // More robust error handling
-            let errorMsg = 'Failed to create submission.';
-            if (err.response?.data?.message) {
-                errorMsg = err.response.data.message;
-            } else if (err.request) {
-                errorMsg = 'No response from server. Please try again.';
-            } else {
-                errorMsg = err.message;
-            }
-            alert(errorMsg);
+            alert(err.response?.data?.message || 'Failed to create submission.');
         }
     };
-    
-    // --- THIS FUNCTION IS UPDATED ---
+
     const handleGrade = async (gradeData) => {
         try {
-            const res = await axios.put(
-                `http://localhost:5000/api/submissions/${selectedSubmission._id}/grade`,
-                gradeData, // This is JSON, so it's fine
-                { headers: { 'Authorization': `Bearer ${token}` } }
+            const res = await api.put(
+                `/submissions/${selectedSubmission._id}/grade`,
+                gradeData,
+                { headers: { Authorization: `Bearer ${token}` } }
             );
-            
-            // Update the submission in the list
-            setSubmissions(prev => 
-                prev.map(sub => sub._id === selectedSubmission._id ? res.data : sub)
+            setSubmissions((prev) =>
+                prev.map((sub) =>
+                    sub._id === selectedSubmission._id ? res.data : sub
+                )
             );
             setIsGradeModalOpen(false);
             setSelectedSubmission(null);
@@ -184,15 +183,13 @@ const MySubmissions = () => {
         }
     };
 
-    // --- THIS FUNCTION IS UPDATED ---
     const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure? This cannot be undone.")) return;
+        if (!window.confirm('Are you sure? This cannot be undone.')) return;
         try {
-            await axios.delete(`http://localhost:5000/api/submissions/${id}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            await api.delete(`/submissions/${id}`, {
+                headers: { Authorization: `Bearer ${token}` },
             });
-            // Remove submission from the list
-            setSubmissions(prev => prev.filter(sub => sub._id !== id));
+            setSubmissions((prev) => prev.filter((sub) => sub._id !== id));
         } catch (err) {
             alert(err.response?.data?.message || 'Failed to delete submission.');
         }
@@ -202,14 +199,11 @@ const MySubmissions = () => {
         setSelectedSubmission(submission);
         setIsGradeModalOpen(true);
     };
-    
-    // Helper to create a viewable URL for the submission file
+
     const getFileUrl = (filePath) => {
-      if (!filePath) return '#';
-      // Make sure it doesn't already start with http
-      if (filePath.startsWith('http')) return filePath;
-      // Create full URL to the backend's static 'uploads' folder
-      return `http://localhost:5000/${filePath.replace(/\\/g, "/")}`;
+        if (!filePath) return '#';
+        if (filePath.startsWith('http')) return filePath;
+        return `${import.meta.env.VITE_API_BASE_URL || ''}/${filePath.replace(/\\/g, '/')}`;
     };
 
     if (isLoading) return <div className="p-6 text-center">Loading...</div>;
@@ -217,13 +211,26 @@ const MySubmissions = () => {
 
     return (
         <div className="p-6">
-            <SubmissionModal isOpen={isSubmitModalOpen} onClose={() => setIsSubmitModalOpen(false)} onSubmit={handleSubmit} assignments={userAssignments} />
-            <GradeModal isOpen={isGradeModalOpen} onClose={() => setIsGradeModalOpen(false)} onSubmit={handleGrade} submission={selectedSubmission} />
-            
+            <SubmissionModal
+                isOpen={isSubmitModalOpen}
+                onClose={() => setIsSubmitModalOpen(false)}
+                onSubmit={handleSubmit}
+                assignments={userAssignments}
+            />
+            <GradeModal
+                isOpen={isGradeModalOpen}
+                onClose={() => setIsGradeModalOpen(false)}
+                onSubmit={handleGrade}
+                submission={selectedSubmission}
+            />
+
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">Submissions</h1>
                 {user?.role === 'student' && (
-                    <button onClick={() => setIsSubmitModalOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg">
+                    <button
+                        onClick={() => setIsSubmitModalOpen(true)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+                    >
                         + Add Submission
                     </button>
                 )}
@@ -241,44 +248,44 @@ const MySubmissions = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {submissions.length > 0 ? submissions.map((sub) => (
-                            <tr key={sub._id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 border-b text-sm">{sub.assignment?.title || 'N/A'}</td>
-                                <td className="px-6 py-4 border-b text-sm">{sub.student?.name || 'N/A'}</td>
-                                <td className="px-6 py-4 border-b text-sm">
-                                    <span className={`relative inline-block px-3 py-1 font-semibold leading-tight ${sub.status === 'graded' ? 'text-green-900' : 'text-yellow-900'}`}>
-                                        <span aria-hidden className={`absolute inset-0 ${sub.status === 'graded' ? 'bg-green-200' : 'bg-yellow-200'} opacity-50 rounded-full`}></span>
-                                        <span className="relative capitalize">{sub.status}</span>
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 border-b text-sm">
-                                  {/* Link to the uploaded file */}
-                                  {sub.filePath ? (
-                                    <a 
-                                      href={getFileUrl(sub.filePath)} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer" 
-                                      className="text-blue-600 hover:underline"
-                                    >
-                                      View File
-                                    </a>
-                                  ) : (
-                                    <span className="text-gray-500">No file</span>
-                                  )}
-                                </td>
-                                <td className="px-6 py-4 border-b text-sm">
-                                    {user?.role === 'teacher' ? (
-                                        <div className="flex gap-4">
-                                            <button onClick={() => openGradeModal(sub)} className="text-green-600 hover:text-green-900">Grade</button>
+                        {submissions.length > 0 ? (
+                            submissions.map((sub) => (
+                                <tr key={sub._id} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 border-b text-sm">{sub.assignment?.title || 'N/A'}</td>
+                                    <td className="px-6 py-4 border-b text-sm">{sub.student?.name || 'N/A'}</td>
+                                    <td className="px-6 py-4 border-b text-sm">
+                                        <span className={`relative inline-block px-3 py-1 font-semibold leading-tight ${sub.status === 'graded' ? 'text-green-900' : 'text-yellow-900'}`}>
+                                            <span aria-hidden className={`absolute inset-0 ${sub.status === 'graded' ? 'bg-green-200' : 'bg-yellow-200'} opacity-50 rounded-full`}></span>
+                                            <span className="relative capitalize">{sub.status}</span>
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 border-b text-sm">
+                                        {sub.filePath ? (
+                                            <a
+                                                href={getFileUrl(sub.filePath)}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 hover:underline"
+                                            >
+                                                View File
+                                            </a>
+                                        ) : (
+                                            <span className="text-gray-500">No file</span>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4 border-b text-sm">
+                                        {user?.role === 'teacher' ? (
+                                            <div className="flex gap-4">
+                                                <button onClick={() => openGradeModal(sub)} className="text-green-600 hover:text-green-900">Grade</button>
+                                                <button onClick={() => handleDelete(sub._id)} className="text-red-600 hover:text-red-900">Delete</button>
+                                            </div>
+                                        ) : (
                                             <button onClick={() => handleDelete(sub._id)} className="text-red-600 hover:text-red-900">Delete</button>
-                                        </div>
-                                    ) : (
-                                       // Student can delete their own submission
-                                       <button onClick={() => handleDelete(sub._id)} className="text-red-600 hover:text-red-900">Delete</button>
-                                    )}
-                                </td>
-                            </tr>
-                        )) : (
+                                        )}
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
                             <tr>
                                 <td colSpan="5" className="text-center py-10 text-gray-500">No submissions found.</td>
                             </tr>
@@ -291,4 +298,3 @@ const MySubmissions = () => {
 };
 
 export default MySubmissions;
-
