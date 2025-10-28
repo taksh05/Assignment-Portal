@@ -9,11 +9,15 @@ const Signup = () => {
   const [role, setRole] = useState("student"); // default
   const navigate = useNavigate();
 
+  // ✅ GET THE API URL FROM ENVIRONMENT VARIABLES
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const handleSignup = async (e) => {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/signup", {
+      // ✅ USE THE API_URL VARIABLE IN THE FETCH REQUEST
+      const res = await fetch(`${API_URL}/api/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, role }),
@@ -25,7 +29,7 @@ const Signup = () => {
         alert("Signup successful ✅");
         localStorage.setItem("token", data.token);
         // Also save user info to localStorage
-        localStorage.setItem("user", JSON.stringify(data.user)); 
+        localStorage.setItem("user", JSON.stringify(data.user));
         navigate("/dashboard"); // redirect to main page
       } else {
         alert(data.message);
@@ -91,7 +95,6 @@ const Signup = () => {
 
         <p className="text-center text-gray-500 text-sm mt-6">
           Already have an account?{" "}
-          {/* ✅ FIXED: Changed <a> tag to Link component for consistency */}
           <Link
             to="/login"
             className="text-blue-600 hover:underline font-medium"
