@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../axios'; // ✅ use your axios instance
 
 // Helper function to get the correct badge class
 const getRoleClass = (role) => {
@@ -27,16 +27,18 @@ const AdminPanel = () => {
       setError(null);
       try {
         const [usersRes, classesRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/admin/users', {
+          api.get('/admin/users', {
             headers: { Authorization: `Bearer ${token}` }
           }),
-          axios.get('http://localhost:5000/api/admin/classes', {
+          api.get('/admin/classes', {
             headers: { Authorization: `Bearer ${token}` }
           })
         ]);
+
         setUsers(usersRes.data);
         setClasses(classesRes.data);
       } catch (err) {
+        console.error('Error fetching admin data:', err);
         setError(err.response?.data?.message || 'Failed to fetch admin data.');
       } finally {
         setIsLoading(false);
@@ -50,10 +52,11 @@ const AdminPanel = () => {
 
   return (
     <div className="space-y-8">
-      
       {/* --- User Management Table --- */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">User Management ({users.length})</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          User Management ({users.length})
+        </h2>
         <div className="table-container">
           <table className="table">
             <thead className="table-head">
@@ -80,7 +83,9 @@ const AdminPanel = () => {
 
       {/* --- Class Overview Table --- */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Class Overview ({classes.length})</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          Class Overview ({classes.length})
+        </h2>
         <div className="table-container">
           <table className="table">
             <thead className="table-head">
@@ -102,7 +107,6 @@ const AdminPanel = () => {
           </table>
         </div>
       </div>
-
     </div>
   );
 };
