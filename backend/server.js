@@ -1,5 +1,5 @@
 import express from "express";
-// import mongoose from "mongoose"; // Temporarily disabled
+// import mongoose from "mongoose"; // Temporarily disabled for testing
 import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet";
@@ -78,11 +78,11 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Temporarily start the server without a database connection
+// Temporarily start the server without a database connection for testing
 app.listen(PORT, () => console.log(`⚡ Server is listening on port ${PORT}`));
 
 /*
-// ====== Connect to MongoDB & Start Server ======
+// ====== This block is temporarily disabled ======
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
