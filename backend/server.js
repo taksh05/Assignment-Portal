@@ -24,7 +24,7 @@ const app = express();
 // ====== Security Middlewares ======
 app.use(helmet());
 
-// ✅ NEW, MORE ROBUST CORS CONFIGURATION
+// NEW, MORE ROBUST CORS CONFIGURATION
 const allowedOrigins = [
   'https://assignment-portal-lzwq.vercel.app', // Your live frontend URL
   'http://localhost:5174'                      // Your local frontend for testing
