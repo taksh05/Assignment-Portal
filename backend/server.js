@@ -31,16 +31,17 @@ const allowedOrigins = [
   "http://localhost:5173", // local dev
 ];
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-};
+app.use(
+  cors({
+    origin: [
+      "https://assignment-portal-xi.vercel.app", // your frontend URL
+      "http://localhost:5173",                   // for local testing
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
+
 
 app.use(cors(corsOptions));
 
