@@ -15,103 +15,73 @@ import assignmentRoutes from "./routes/assignmentRoutes.js";
 import submissionRoutes from "./routes/submissionRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 
-dotenv.config(); // Load environment variables
+dotenv.config();
 const app = express();
 
-// ============================
-// 🔒 SECURITY + BASIC SETUP
-// ============================
+// ---------------- SECURITY ----------------
 app.use(helmet());
 app.use(express.json());
 
-// ✅ Dynamic CORS Setup (allow frontend + localhost)
-const allowedOrigins = [
-  "https://assignment-portal-xi.vercel.app", // your frontend Vercel domain
-  "https://assignment-portal-ten.vercel.app", // backend Vercel domain
-  "http://localhost:5173", // local dev
-];
+// ✅ FIXED CORS (explicitly allow frontend + localhost)
+app.use(
+  cors({
+    origin: [
+      "https://assignment-portal-xi.vercel.app", // your deployed frontend
+      "https://assignment-portal-ten.vercel.app", // your deployed backend (vercel)
+      "http://localhost:5173", // local dev
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
-
-// ✅ Rate Limiting (for login and auth routes)
+// ---------------- RATE LIMIT ----------------
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP
-  standardHeaders: true,
-  legacyHeaders: false,
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: "Too many requests. Please try again later.",
 });
+app.use("/api/auth", authLimiter, authRoutes);
 
-// ============================
-// 📁 FILE UPLOADS DIRECTORY
-// ============================
+// ---------------- FILE UPLOADS ----------------
 const __dirname = path.resolve();
 const uploadsDir = path.join(__dirname, "uploads");
-
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
-}
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 app.use("/uploads", express.static(uploadsDir));
 
-// ============================
-// 🚏 API ROUTES
-// ============================
-app.use("/api/auth", authLimiter, authRoutes);
+// ---------------- ROUTES ----------------
 app.use("/api/classes", classRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/admin", adminRoutes);
 
-// ============================
-// 🧭 DEFAULT + ERROR HANDLERS
-// ============================
 app.get("/", (req, res) => {
-  res.json({
-    message: "🎓 Assignment Portal API is running successfully 🚀",
-  });
+  res.json({ message: "🎓 Assignment Portal API working fine 🚀" });
 });
 
-// 404 handler
+// ---------------- ERROR HANDLING ----------------
 app.use((req, res) => {
   res.status(404).json({ message: "❌ Route not found" });
 });
 
-// Global error handler
 app.use((err, req, res, next) => {
   console.error("🔥 Error:", err);
-  if (err instanceof multer.MulterError) {
+  if (err instanceof multer.MulterError)
     return res.status(400).json({ message: err.message });
-  }
   res.status(500).json({ message: "Internal Server Error", error: err.message });
 });
 
-// ============================
-// 🌐 MONGODB CONNECTION
-// ============================
+// ---------------- DATABASE CONNECTION ----------------
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
-  console.error("❌ MONGO_URI missing in .env");
+  console.error("❌ MONGO_URI not found in .env");
   process.exit(1);
 }
 
 mongoose
-  .connect(MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(MONGO_URI)
   .then(() => {
     console.log("✅ Connected to MongoDB Atlas");
     app.listen(PORT, () => console.log(`⚡ Server running on port ${PORT}`));
