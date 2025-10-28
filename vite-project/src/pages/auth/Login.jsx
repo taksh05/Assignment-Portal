@@ -1,16 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios'; // Make sure you have axios: npm install axios
-
-// Inline SVGs for social icons (Keep them in case you need them later)
-const GoogleIcon = () => (
-  // SVG code...
-);
-
-const GitHubIcon = () => (
-  // SVG code...
-);
-
+import axios from 'axios';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -18,7 +8,6 @@ const Login = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // ✅ GET THE API URL FROM ENVIRONMENT VARIABLES
   const API_URL = import.meta.env.VITE_API_URL;
 
   const handleSubmit = async (e) => {
@@ -26,7 +15,6 @@ const Login = () => {
     setError(null);
 
     try {
-      // ✅ USE THE API_URL VARIABLE IN THE AXIOS REQUEST
       const res = await axios.post(`${API_URL}/api/auth/login`, {
         email,
         password,
@@ -44,9 +32,7 @@ const Login = () => {
   };
 
   return (
-    // This class applies the bluish-to-purple gradient background
     <div className="login-background">
-      {/* These classes apply the card style, animation, and scale-on-hover effect */}
       <div className="login-card login-card-hover">
         <h1 className="text-3xl font-bold text-center mb-2 text-gray-900">
           Hola 👋
@@ -70,7 +56,7 @@ const Login = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="input-field" // Uses the animated input style
+              className="input-field"
               placeholder="you@example.com"
               required
             />
@@ -84,7 +70,7 @@ const Login = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="input-field" // Uses the animated input style
+              className="input-field"
               placeholder="Enter your password"
               required
             />
@@ -100,7 +86,7 @@ const Login = () => {
             </a>
           </div>
 
-          <button type="submit" className="btn-primary w-full"> {/* Uses the animated button style */}
+          <button type="submit" className="btn-primary w-full">
             Login
           </button>
         </form>
