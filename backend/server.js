@@ -6,7 +6,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import path from "path";
 import fs from "fs";
-import multer from "multer"; // <-- THIS LINE IS ADDED
+import multer from "multer";
 
 // Import Routes
 import authRoutes from "./routes/authRoutes.js";
@@ -23,11 +23,26 @@ const app = express();
 
 // ====== Security Middlewares ======
 app.use(helmet());
+
+// ✅ NEW, MORE ROBUST CORS CONFIGURATION
+const allowedOrigins = [
+  'https://assignment-portal-lzwq.vercel.app', // Your live frontend URL
+  'http://localhost:5174'                      // Your local frontend for testing
+];
+
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || "http://localhost:5174",
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 };
 app.use(cors(corsOptions));
+
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -70,7 +85,6 @@ app.use((req, res) => {
 // ====== Global Error Handler ======
 app.use((err, req, res, next) => {
   console.error("🔥 An unexpected error occurred:", err);
-  // Multer error handling (now safe to use)
   if (err instanceof multer.MulterError) {
     return res.status(400).json({ message: err.message });
   }
@@ -96,4 +110,3 @@ mongoose
     console.error("❌ MongoDB connection error:", err);
     process.exit(1);
   });
-
