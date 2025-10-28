@@ -1,10 +1,8 @@
-// vite-project/src/axios.js
 import axios from "axios";
 
 const api = axios.create({
-  // 👇 relative path works on both local and deployed versions
-  baseURL: "/api",
-  withCredentials: true,
+  baseURL: "https://assignment-portal-86z6.vercel.app/api", // <- YOUR BACKEND URL
+  withCredentials: false, // keep false unless you use cookies
 });
 
 export default api;
