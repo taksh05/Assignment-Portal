@@ -1,7 +1,7 @@
 {
-  "name": "backend",
+  "name": "assignment-portal-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Backend for Assignment Portal",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -9,16 +9,18 @@
     "dev": "nodemon server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Taksh Paneri",
   "license": "ISC",
   "dependencies": {
-    "bcrypt": "^6.0.0",
+    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.1.0",
+    "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.19.1",
-    "multer": "^2.0.2"
+    "mongoose": "^8.5.0",
+    "multer": "^1.4.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
