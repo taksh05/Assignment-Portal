@@ -6,12 +6,11 @@ import mongoose from "mongoose";
 import rateLimit from "express-rate-limit";
 import path from "path";
 
-// Import Routes
+// ✅ Import Routes
 import authRoutes from "./routes/authRoutes.js";
 import assignmentRoutes from "./routes/assignmentRoutes.js";
 import submissionRoutes from "./routes/submissionRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
-import classRoutes from "./routes/classRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -22,10 +21,10 @@ const app = express();
 app.use(express.json());
 app.use(helmet());
 
-// ✅ CORS Configuration (Vercel + Local + Render-safe)
+// ✅ CORS Configuration
 const allowedOrigins = [
-  "https://assignment-portal-xi.vercel.app", // your frontend
-  "https://assignment-portal-86z6.vercel.app", // your backend on Vercel
+  "https://assignment-portal-xi.vercel.app", // frontend
+  "https://assignment-portal-86z6.vercel.app", // vercel backend (if any)
   "http://localhost:5173", // local dev
 ];
 
@@ -43,11 +42,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// Rate Limiter for safety
+// ✅ Rate Limiter
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 min
+  windowMs: 15 * 60 * 1000,
   max: 100,
-  message: "Too many requests, please try again later.",
 });
 app.use(limiter);
 
@@ -58,31 +56,30 @@ app.use("/api/auth", authRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/classes", classRoutes);
 
-// Default route
+// ✅ Default route
 app.get("/", (req, res) => {
-  res.json({ message: "🎓 Assignment Portal API is running successfully 🚀" });
+  res.json({ message: "🎓 Assignment Portal Backend running successfully 🚀" });
 });
 
 // ============================
-// ⚙️ MongoDB Connection
+// ⚙️ MongoDB Connection + Server
 // ============================
 const MONGO_URI = process.env.MONGO_URI;
+const PORT = process.env.PORT || 6000;
+
 if (!MONGO_URI) {
-  console.error("❌ MONGO_URI is missing from environment variables");
+  console.error("❌ MONGO_URI missing in .env");
   process.exit(1);
 }
-
-// ✅ Important for Render: bind to 0.0.0.0
-const PORT = process.env.PORT || 6000;
 
 mongoose
   .connect(MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB connected successfully");
+    // ✅ Important for Render
     app.listen(PORT, "0.0.0.0", () => {
-      console.log(`⚡ Server running on port ${PORT}`);
+      console.log(`🚀 Server running on port ${PORT}`);
     });
   })
   .catch((err) => {
