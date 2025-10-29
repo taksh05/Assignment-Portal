@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
@@ -18,25 +19,25 @@ dotenv.config();
 const app = express();
 
 // ============================
-// 🧩 BASIC SETUP
+// 🧰 BASIC SETUP
 // ============================
 app.use(helmet());
 app.use(express.json());
 
-// ✅ OPEN CORS — allow ALL origins (for debugging)
+// ✅ Allow ALL origins (for testing & Render/Vercel)
 app.use(
   cors({
-    origin: "*",
+    origin: "*", // allow all temporarily
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// ✅ Handle all preflight OPTIONS requests
+// ✅ Handle OPTIONS requests
 app.options("*", (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.sendStatus(200);
 });
 
@@ -63,7 +64,7 @@ app.use("/api/admin", adminRoutes);
 // 🧭 DEFAULT + ERROR HANDLERS
 // ============================
 app.get("/", (req, res) => {
-  res.json({ message: "🎓 Assignment Portal Backend running (CORS open) 🚀" });
+  res.json({ message: "🎓 Assignment Portal Backend running successfully 🚀" });
 });
 
 app.use((req, res) => res.status(404).json({ message: "❌ Route not found" }));
@@ -94,9 +95,7 @@ mongoose
   .connect(MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB connected successfully");
-    app.listen(PORT, "0.0.0.0", () =>
-      console.log(`🚀 Server running on port ${PORT}`)
-    );
+    app.listen(PORT, "0.0.0.0", () => console.log(`🚀 Server running on port ${PORT}`));
   })
   .catch((err) => {
     console.error("❌ MongoDB connection failed:", err.message);
