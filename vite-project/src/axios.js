@@ -1,8 +1,8 @@
 import axios from "axios";
 
-const API = axios.create({
-  baseURL: "https://assignment-portal-86z6.vercel.app/api",
+const api = axios.create({
+  baseURL: "https://assignment-portal-tx7f.onrender.com",
+  withCredentials: true, // ✅ optional, if you send cookies or tokens
 });
-
 
 export default api;
