@@ -1,8 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import helmet from "helmet";
-import rateLimit from "express-rate-limit";
 import cors from "cors";
 import path from "path";
 import fs from "fs";
@@ -10,7 +8,7 @@ import multer from "multer";
 
 // Import Routes
 import authRoutes from "./routes/authRoutes.js";
-import classRoutes from "./routes/classRoutes.js";
+import classRoutes from "./routes of/classRoutes.js";
 import assignmentRoutes from "./routes/assignmentRoutes.js";
 import submissionRoutes from "./routes/submissionRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
@@ -19,22 +17,17 @@ dotenv.config();
 const app = express();
 
 // ============================
-// 🔒 SECURITY + BASIC SETUP
+// 🔒 BASIC SETUP
 // ============================
-app.use(helmet());
-app.use(express.json());
 
-// ✅ Universal CORS Fix (Allow all)
-app.use(
-  cors({
-    origin: "*", // allow ALL origins
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+// ✅ Universal CORS Fix: This allows requests from ALL frontend origins.
+app.use(cors());
 
-// Handle OPTIONS requests globally
+// Handle preflight OPTIONS requests for all routes
 app.options("*", cors());
+
+// Middleware to parse JSON bodies
+app.use(express.json());
 
 // ============================
 // 📁 FILE UPLOADS DIRECTORY
