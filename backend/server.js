@@ -3,10 +3,10 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import cors from "cors";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
-import cors from "cors";
 
 // Import Routes
 import authRoutes from "./routes/authRoutes.js";
@@ -19,27 +19,22 @@ dotenv.config();
 const app = express();
 
 // ============================
-// 🧰 BASIC SETUP
+// 🔒 SECURITY + BASIC SETUP
 // ============================
 app.use(helmet());
 app.use(express.json());
 
-// ✅ Allow ALL origins (for testing & Render/Vercel)
+// ✅ Universal CORS Fix (Allow all)
 app.use(
   cors({
-    origin: "*", // allow all temporarily
+    origin: "*", // allow ALL origins
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// ✅ Handle OPTIONS requests
-app.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.sendStatus(200);
-});
+// Handle OPTIONS requests globally
+app.options("*", cors());
 
 // ============================
 // 📁 FILE UPLOADS DIRECTORY
@@ -95,7 +90,9 @@ mongoose
   .connect(MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB connected successfully");
-    app.listen(PORT, "0.0.0.0", () => console.log(`🚀 Server running on port ${PORT}`));
+    app.listen(PORT, "0.0.0.0", () =>
+      console.log(`🚀 Server running on port ${PORT}`)
+    );
   })
   .catch((err) => {
     console.error("❌ MongoDB connection failed:", err.message);
