@@ -2,7 +2,6 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
@@ -19,27 +18,27 @@ dotenv.config();
 const app = express();
 
 // ============================
-// 🔒 SECURITY + BASIC SETUP
+// 🧩 BASIC SETUP
 // ============================
 app.use(helmet());
 app.use(express.json());
 
-// ✅ FIXED: Proper CORS middleware for Vercel + Render + Localhost
+// ✅ OPEN CORS — allow ALL origins (for debugging)
 app.use(
   cors({
-    origin: [
-      "https://assignment-portal-xi.vercel.app", // Frontend (Vercel)
-      "https://assignment-portal-tx7l.onrender.com", // Backend (Render)
-      "http://localhost:5173", // Local development
-    ],
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
   })
 );
 
-// ✅ Handle preflight OPTIONS requests globally
-app.options("*", cors());
+// ✅ Handle all preflight OPTIONS requests
+app.options("*", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.sendStatus(200);
+});
 
 // ============================
 // 📁 FILE UPLOADS DIRECTORY
@@ -64,7 +63,7 @@ app.use("/api/admin", adminRoutes);
 // 🧭 DEFAULT + ERROR HANDLERS
 // ============================
 app.get("/", (req, res) => {
-  res.json({ message: "🎓 Assignment Portal Backend running successfully 🚀" });
+  res.json({ message: "🎓 Assignment Portal Backend running (CORS open) 🚀" });
 });
 
 app.use((req, res) => res.status(404).json({ message: "❌ Route not found" }));
