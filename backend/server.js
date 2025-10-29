@@ -15,13 +15,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 
 dotenv.config();
 const app = express();
-const cors = require("cors");
 
-app.use(cors({
-  origin: "https://assignment-portal-xi.vercel.app",  // Your Vercel frontend URL
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
 
 // =====================================
 // 🌍 CORS CONFIGURATION
