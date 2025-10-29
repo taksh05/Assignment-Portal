@@ -8,7 +8,7 @@ import multer from "multer";
 
 // Import Routes
 import authRoutes from "./routes/authRoutes.js";
-import classRoutes from "./routes of/classRoutes.js";
+import classRoutes from "./routes/classRoutes.js"; // ✅ FIXED
 import assignmentRoutes from "./routes/assignmentRoutes.js";
 import submissionRoutes from "./routes/submissionRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
@@ -20,7 +20,7 @@ const app = express();
 // 🔒 BASIC SETUP
 // ============================
 
-// ✅ Universal CORS Fix: This allows requests from ALL frontend origins.
+// Universal CORS: This allows requests from ALL frontend origins.
 app.use(cors());
 
 // Handle preflight OPTIONS requests for all routes
