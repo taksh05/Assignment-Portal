@@ -16,81 +16,48 @@ import adminRoutes from "./routes/adminRoutes.js";
 dotenv.config();
 const app = express();
 
-
-// =====================================
-// 🌍 CORS CONFIGURATION
-// =====================================
-// Allow only your frontend hosted on Vercel
-app.use(
-  cors({
-    origin: "https://assignment-portal-xi.vercel.app", // your deployed frontend
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true, // if you use tokens/cookies
-  })
-);
-
-// Handle preflight requests (OPTIONS)
+// ✅ UNIVERSAL CORS FIX (Allows everything)
+app.use(cors()); // 🚀 Allow ALL origins, methods, headers (no restrictions)
 app.options("*", cors());
 
-// =====================================
-// 🧩 BASIC MIDDLEWARE
-// =====================================
+// Middleware
 app.use(express.json());
 
-// =====================================
-// 📁 FILE UPLOAD DIRECTORY SETUP
-// =====================================
+// 📂 File Upload Handling
 const __dirname = path.resolve();
 const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 app.use("/uploads", express.static(uploadsDir));
 
-// =====================================
-// 🚏 ROUTES
-// =====================================
+// ✅ API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/admin", adminRoutes);
 
-// =====================================
-// 🏠 DEFAULT ROUTE
-// =====================================
+// ✅ Default Route
 app.get("/", (req, res) => {
-  res.json({
-    message: "✅ Assignment Portal Backend is live and CORS enabled!",
-  });
+  res.json({ message: "✅ Backend is LIVE and CORS is fully open!" });
 });
 
-// =====================================
-// ❌ ERROR HANDLING
-// =====================================
-// 404 Route Not Found
+// ❌ 404 Route
 app.use((req, res) => {
   res.status(404).json({ message: "❌ Route not found" });
 });
 
-// Global Error Handler
+// 🧱 Error Handler
 app.use((err, req, res, next) => {
-  console.error("🔥 Server Error:", err);
+  console.error("🔥 Error:", err);
   if (err instanceof multer.MulterError) {
     return res.status(400).json({ message: `File Upload Error: ${err.message}` });
   }
   res.status(500).json({ message: "Internal Server Error", error: err.message });
 });
 
-// =====================================
-// 🌐 DATABASE + SERVER STARTUP
-// =====================================
+// 🌐 Database + Server
 const PORT = process.env.PORT || 10000;
 const MONGO_URI = process.env.MONGO_URI;
-
-if (!MONGO_URI) {
-  console.error("❌ Missing MONGO_URI in .env file!");
-  process.exit(1);
-}
 
 mongoose
   .connect(MONGO_URI)
