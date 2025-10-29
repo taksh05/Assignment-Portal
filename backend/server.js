@@ -24,29 +24,30 @@ const app = express();
 app.use(helmet());
 app.use(express.json());
 
-// ✅ FIXED — Allow frontend (Vercel) + Render backend + localhost
+// ✅ Universal & Safe CORS Setup
 const allowedOrigins = [
-  "https://assignment-portal-xi.vercel.app", // frontend (Vercel)
-  "https://assignment-portal-tx7l.onrender.com", // backend (Render)
+  "https://assignment-portal-xi.vercel.app", // frontend
+  "https://assignment-portal-tx7l.onrender.com", // backend
   "http://localhost:5173", // local dev
 ];
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed for this origin"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-
-  next();
-});
+// Handle preflight requests cleanly
+app.options("*", cors());
 
 // ============================
 // 📁 FILE UPLOADS DIRECTORY
@@ -102,7 +103,9 @@ mongoose
   .connect(MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB connected successfully");
-    app.listen(PORT, "0.0.0.0", () => console.log(`🚀 Server running on port ${PORT}`));
+    app.listen(PORT, "0.0.0.0", () =>
+      console.log(`🚀 Server running on port ${PORT}`)
+    );
   })
   .catch((err) => {
     console.error("❌ MongoDB connection failed:", err.message);
