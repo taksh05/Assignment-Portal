@@ -1,30 +1,26 @@
-import express from 'express';
-import User from '../models/user.js';
-import Class from '../models/Class.js';
-import protect from '../middleware/authMiddleware.js';
-import adminProtect from '../middleware/adminMiddleware.js';
+import express from "express";
+import User from "../models/user.js";
+import Class from "../models/Class.js";
 
 const router = express.Router();
 
-// GET all users (Admin Only)
-router.get('/users', protect, adminProtect, async (req, res) => {
+// ✅ Fetch all users
+router.get("/users", async (req, res) => {
   try {
-    // Select '-password' to hide the hashed password
-    const users = await User.find({}).select('-password');
+    const users = await User.find();
     res.json(users);
   } catch (error) {
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: "Error fetching users", error: error.message });
   }
 });
 
-// GET all classes (Admin Only)
-router.get('/classes', protect, adminProtect, async (req, res) => {
+// ✅ Fetch all classes
+router.get("/classes", async (req, res) => {
   try {
-    // Populate 'teacher' field to show the teacher's name
-    const classes = await Class.find({}).populate('teacher', 'name');
+    const classes = await Class.find().populate("teacher", "name email");
     res.json(classes);
   } catch (error) {
-    res.status(500).json({ message: 'Server Error' });
+    res.status(500).json({ message: "Error fetching classes", error: error.message });
   }
 });
 
